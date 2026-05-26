@@ -1,0 +1,14 @@
+crewai
+langchain-openai
+streamlit
+duckduckgo-search
+crewai_tools
+python-dotenv
+markdown
+pydantic
+pytest
+# For scraping if needed later
+beautifulsoup4
+streamlit-authenticator
+PyYAML
+langchain-anthropic

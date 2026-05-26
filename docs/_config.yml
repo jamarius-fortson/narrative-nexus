@@ -1,0 +1,21 @@
+theme: jekyll-theme-cayman
+title: AI Content Generation Pipeline
+description: A production-ready, multi-agent autonomous system for high-quality content generation
+show_downloads: true
+google_analytics: 
+github:
+  repository_url: https://github.com/nadir-sheikh09/Content-Generation-Pipeline-Agent
+  owner_url: https://github.com/nadir-sheikh09
+
+# Navigation
+plugins:
+  - jekyll-relative-links
+relative_links:
+  enabled: true
+  collections: true
+
+# Markdown settings
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
