@@ -1,10 +1,12 @@
 from crewai.tools import tool
 from langchain_community.tools import DuckDuckGoSearchRun
 
+
 @tool("search_tool")
 def search_tool(query: str) -> str:
     """Search the web for information on a given topic."""
     from logger import log_progress
+
     log_progress(f"DEBUG: search_tool called with query: {query}")
     print(f"DEBUG: search_tool called with query: {query}")
     try:

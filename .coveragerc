@@ -1,0 +1,6 @@
+[run]
+omit =
+    .venv/*
+    venv/*
+    test_*
+    verify_*

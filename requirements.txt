@@ -12,3 +12,4 @@ beautifulsoup4
 streamlit-authenticator
 PyYAML
 langchain-anthropic
+langchain-community
