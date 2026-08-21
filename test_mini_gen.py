@@ -1,9 +1,16 @@
 import os
 import sys
+import pytest
 from dotenv import load_dotenv
 from content_generation_crew import ContentGenerationCrew
 from logger import log_progress
 
+
+@pytest.mark.integration
+@pytest.mark.skipif(
+    not os.getenv("DEEPSEEK_API_KEY"),
+    reason="Requires DEEPSEEK_API_KEY in environment for live generation test",
+)
 def test_mini():
     load_dotenv()
     log_progress("Starting Mini Test...")
@@ -11,7 +18,7 @@ def test_mini():
         crew_obj = ContentGenerationCrew()
         topic = "Healthy Breakfast Ideas"
         log_progress(f"Testing with topic: {topic}")
-        
+
         result = crew_obj.generate_content(topic, "Blog Post")
         log_progress("Generation finished.")
         print("\n--- RESULT ---")
@@ -20,7 +27,9 @@ def test_mini():
     except Exception as e:
         log_progress(f"ERROR: {e}")
         import traceback
+
         traceback.print_exc()
+
 
 if __name__ == "__main__":
     test_mini()

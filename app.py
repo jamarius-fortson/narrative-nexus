@@ -9,16 +9,18 @@ st.set_page_config(
     page_title="NarrativeNexus | Multi-Agent Editorial Engine",
     page_icon="🚀",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
 )
 
 # Authentication Check
 from auth import check_authentication
+
 if not check_authentication():
     st.stop()
 
 # Custom CSS for NarrativeNexus Premium Design System (High-End Dark Mode & Glassmorphism)
-st.markdown("""
+st.markdown(
+    """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Inter:wght@400;500;600&display=swap');
     
@@ -143,19 +145,26 @@ st.markdown("""
         border-bottom-color: #6366f1 !important;
     }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
+
 
 # Initialize crew
 @st.cache_resource
 def get_crew(model_name="deepseek-chat"):
     return ContentGenerationCrew(model=model_name)
 
+
 # Layout
 col1, col2 = st.columns([2, 1])
 
 with col1:
     st.markdown('<p class="main-header">NarrativeNexus</p>', unsafe_allow_html=True)
-    st.markdown('<p class="sub-text">Decentralized Intelligence for Professional Content Production</p>', unsafe_allow_html=True)
+    st.markdown(
+        '<p class="sub-text">Decentralized Intelligence for Professional Content Production</p>',
+        unsafe_allow_html=True,
+    )
 
 # Sidebar - Configuration & Intelligence Overview
 with st.sidebar:
@@ -164,9 +173,9 @@ with st.sidebar:
         "Large Language Model",
         ["deepseek-chat", "gpt-4o", "claude-3-5-sonnet-20240620"],
         index=0,
-        help="Select the neural architecture to power the agent reasoning."
+        help="Select the neural architecture to power the agent reasoning.",
     )
-    
+
     st.divider()
     st.markdown("### 🤖 The Intelligence Nexus")
     agents_info = [
@@ -174,11 +183,12 @@ with st.sidebar:
         ("✍️", "Narrative Architect", "Content Synthesis"),
         ("📝", "Executive Editor", "Quality Control"),
         ("✅", "Integrity Scout", "Fact Verification"),
-        ("📈", "Growth Strategist", "SEO & Distribution")
+        ("📈", "Growth Strategist", "SEO & Distribution"),
     ]
-    
+
     for icon, name, role in agents_info:
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="agent-id-card">
             <div class="agent-icon">{icon}</div>
             <div>
@@ -186,17 +196,29 @@ with st.sidebar:
                 <div style="font-size: 0.75rem; color: #94a3b8;">{role}</div>
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
 # Inputs Section
 st.markdown('<div class="nexus-panel">', unsafe_allow_html=True)
 c1, c2 = st.columns([3, 1])
 with c1:
-    topic = st.text_input("Project Objective", placeholder="Enter the core topic or thesis for investigation...")
+    topic = st.text_input(
+        "Project Objective",
+        placeholder="Enter the core topic or thesis for investigation...",
+    )
 with c2:
-    content_type = st.selectbox("Output Schema", 
-                              ["White Paper", "Strategic Blog Post", "Technical Narrative", "Intelligence Brief"])
-st.markdown('</div>', unsafe_allow_html=True)
+    content_type = st.selectbox(
+        "Output Schema",
+        [
+            "White Paper",
+            "Strategic Blog Post",
+            "Technical Narrative",
+            "Intelligence Brief",
+        ],
+    )
+st.markdown("</div>", unsafe_allow_html=True)
 
 if st.button("🚀 ORCHESTRATE GENERATION"):
     if not topic:
@@ -205,28 +227,36 @@ if st.button("🚀 ORCHESTRATE GENERATION"):
         try:
             # Re-initialize crew with selected model
             crew = get_crew(selected_model)
-            
-            with st.status(f"🌐 Orchestrating agents with {selected_model}...", expanded=True) as status:
+
+            with st.status(
+                f"🌐 Orchestrating agents with {selected_model}...", expanded=True
+            ) as status:
                 st.write("📡 Initiating Secure Data Acquisition...")
-                
+
                 start_time = time.time()
                 # Ensure the crew class supports the model parameter
                 result = crew.generate_content(topic, content_type)
                 end_time = time.time()
-                
-                status.update(label="✨ Intelligence Synthesis Complete!", state="complete", expanded=False)
-            
+
+                status.update(
+                    label="✨ Intelligence Synthesis Complete!",
+                    state="complete",
+                    expanded=False,
+                )
+
             # Analytics & Content Rendering
-            st.success(f"Production cycle completed in {end_time - start_time:.1f} seconds.")
-            
+            st.success(
+                f"Production cycle completed in {end_time - start_time:.1f} seconds."
+            )
+
             # Logic for scoring and saving (assuming these classes are available)
             try:
                 from quality_scorer import ContentQualityScorer
                 from content_versioning import ContentVersionControl
-                
+
                 scorer = ContentQualityScorer()
                 quality_results = scorer.score_content(result["final_content"], topic)
-                
+
                 vc = ContentVersionControl()
                 version_id = vc.save_version(topic, result["final_content"])
             except ImportError:
@@ -234,46 +264,67 @@ if st.button("🚀 ORCHESTRATE GENERATION"):
                 version_id = None
 
             # Results Display
-            tab1, tab2, tab3, tab4 = st.tabs(["📄 Final Narrative", "📊 Production Analytics", "⭐ Quality Governance", "📜 History"])
-            
+            tab1, tab2, tab3, tab4 = st.tabs(
+                [
+                    "📄 Final Narrative",
+                    "📊 Production Analytics",
+                    "⭐ Quality Governance",
+                    "📜 History",
+                ]
+            )
+
             with tab1:
                 st.markdown('<div class="nexus-panel">', unsafe_allow_html=True)
                 st.markdown(result["final_content"])
-                st.markdown('</div>', unsafe_allow_html=True)
-                
+                st.markdown("</div>", unsafe_allow_html=True)
+
                 st.download_button(
                     label="📥 Export to Markdown",
                     data=result["final_content"],
                     file_name=f"NarrativeNexus_{datetime.now().strftime('%Y%m%d')}.md",
-                    mime="text/markdown"
+                    mime="text/markdown",
                 )
-                
+
             with tab2:
                 st.markdown('<div class="nexus-panel">', unsafe_allow_html=True)
                 m1, m2, m3 = st.columns(3)
                 m1.metric("Node Count", result["agents_used"], "Active Agents")
-                m2.metric("Sequential Steps", result["tasks_completed"], "Verified Tasks")
-                m3.metric("Word Velocity", len(result["final_content"].split()), "Words Generated")
-                st.markdown('</div>', unsafe_allow_html=True)
-                
+                m2.metric(
+                    "Sequential Steps", result["tasks_completed"], "Verified Tasks"
+                )
+                m3.metric(
+                    "Word Velocity",
+                    len(result["final_content"].split()),
+                    "Words Generated",
+                )
+                st.markdown("</div>", unsafe_allow_html=True)
+
             with tab3:
                 if quality_results:
                     st.markdown('<div class="nexus-panel">', unsafe_allow_html=True)
-                    st.markdown(f"### Governance Rating: **{quality_results['grade']}**")
-                    st.progress(quality_results['overall_score'] / 100)
-                    
+                    st.markdown(
+                        f"### Governance Rating: **{quality_results['grade']}**"
+                    )
+                    st.progress(quality_results["overall_score"] / 100)
+
                     c1, c2, c3 = st.columns(3)
-                    c1.metric("Linguistic Clarity", quality_results['scores']['readability'])
-                    c2.metric("Logical Structure", quality_results['scores']['structure'])
-                    c3.metric("Strategic Engagement", quality_results['scores']['engagement'])
-                    
+                    c1.metric(
+                        "Linguistic Clarity", quality_results["scores"]["readability"]
+                    )
+                    c2.metric(
+                        "Logical Structure", quality_results["scores"]["structure"]
+                    )
+                    c3.metric(
+                        "Strategic Engagement", quality_results["scores"]["engagement"]
+                    )
+
                     st.markdown("#### Strategic Recommendations")
-                    for rec in quality_results['recommendations']:
+                    for rec in quality_results["recommendations"]:
                         st.markdown(f"- {rec}")
-                    st.markdown('</div>', unsafe_allow_html=True)
+                    st.markdown("</div>", unsafe_allow_html=True)
                 else:
                     st.info("Quality governance module not initialized.")
-            
+
             with tab4:
                 st.markdown('<div class="nexus-panel">', unsafe_allow_html=True)
                 if version_id:
@@ -281,12 +332,14 @@ if st.button("🚀 ORCHESTRATE GENERATION"):
                     st.table(history)
                 else:
                     st.info("No historical data available for this objective.")
-                st.markdown('</div>', unsafe_allow_html=True)
-                
+                st.markdown("</div>", unsafe_allow_html=True)
+
         except Exception as e:
             st.error(f"Orchestration Failure: {str(e)}")
             st.exception(e)
 
 st.markdown("---")
-st.markdown(f'<p style="text-align: center; color: #64748b; font-size: 0.8rem;">© {datetime.now().year} NarrativeNexus | Advanced Multi-Agent Intelligence Platform</p>', unsafe_allow_html=True)
-
+st.markdown(
+    f'<p style="text-align: center; color: #64748b; font-size: 0.8rem;">© {datetime.now().year} NarrativeNexus | Advanced Multi-Agent Intelligence Platform</p>',
+    unsafe_allow_html=True,
+)

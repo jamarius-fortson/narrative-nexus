@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 def setup_auth(config_file="config.yaml"):
     """
     Sets up the authentication system using streamlit-authenticator.
@@ -17,7 +18,7 @@ def setup_auth(config_file="config.yaml"):
         authentication_status: Boolean/None status.
         username: Username of logged in user.
     """
-    
+
     # Check if Auth is disabled via ENV (for local dev)
     if os.getenv("ENABLE_AUTH", "true").lower() == "false":
         return None, "Dev User", True, "dev"
@@ -25,18 +26,18 @@ def setup_auth(config_file="config.yaml"):
     if not os.path.exists(config_file):
         # Create default config if not exists (In prod this should be injected or handled with secrets)
         create_default_config(config_file)
-        
+
     with open(config_file) as file:
         config = yaml.load(file, Loader=SafeLoader)
 
     authenticator = stauth.Authenticate(
-        config['credentials'],
-        config['cookie']['name'],
-        config['cookie']['key'],
-        config['cookie']['expiry_days'],
-        config['pre-authorized']
+        config["credentials"],
+        config["cookie"]["name"],
+        config["cookie"]["key"],
+        config["cookie"]["expiry_days"],
+        config["pre-authorized"],
     )
-    
+
     # Render login widget
     try:
         results = authenticator.login()
@@ -44,21 +45,28 @@ def setup_auth(config_file="config.yaml"):
         # Older versions return nothing, newer return tuple
     except Exception as e:
         st.error(f"Auth Error: {e}")
-        
-    return authenticator, st.session_state.get("name"), st.session_state.get("authentication_status"), st.session_state.get("username")
+
+    return (
+        authenticator,
+        st.session_state.get("name"),
+        st.session_state.get("authentication_status"),
+        st.session_state.get("username"),
+    )
+
 
 def create_default_config(filepath):
     """Creates a default config file with a default user (admin/admin) hashed."""
     # Note: In a real architecture, we would generate this hash securely.
     # The hash for 'admin' with stauth is roughly this (bcrypt)
     # Use stauth.Hasher(['admin']).generate() to get this.
-    
-    # We will generate a safe default one dynamically if needed, 
-    # but for now we write a template. 
+
+    # We will generate a safe default one dynamically if needed,
+    # but for now we write a template.
     # Ideally, we should pull from ENV to build this YAML in memory to avoid writing secrets to disk.
-    
+
     # Let's try to build config from ENV instead of file for better security
     pass
+
 
 def get_auth_config_from_env():
     """
@@ -66,34 +74,41 @@ def get_auth_config_from_env():
     This is best practice for Docker/Cloud deployments to avoid committing YAML secrets.
     """
     import streamlit_authenticator as stauth
-    
+
     admin_user = os.getenv("APP_USERNAME", "admin")
     admin_pass = os.getenv("APP_PASSWORD", "admin")
     secret_key = os.getenv("APP_SECRET_KEY", "some_random_secret_key")
-    
-    # Hash the password on startup
-    hashed_pass = stauth.Hasher([admin_pass]).generate()[0]
-    
+
+    # Hash the password on startup safely across streamlit_authenticator versions
+    try:
+        if hasattr(stauth.Hasher, "hash"):
+            hashed_pass = stauth.Hasher.hash(admin_pass)
+        elif hasattr(stauth.Hasher, "generate"):
+            hashed_pass = stauth.Hasher([admin_pass]).generate()[0]
+        else:
+            hashed_pass = stauth.Hasher().hash(admin_pass)
+    except Exception:
+        hashed_pass = admin_pass
+
     config = {
-        'credentials': {
-            'usernames': {
+        "credentials": {
+            "usernames": {
                 admin_user: {
-                    'name': 'Admin User',
-                    'password': hashed_pass,
-                    'email': 'admin@example.com' # optional
+                    "name": "Admin User",
+                    "password": hashed_pass,
+                    "email": "admin@example.com",  # optional
                 }
             }
         },
-        'cookie': {
-            'name': 'content_pipeline_auth',
-            'key': secret_key,
-            'expiry_days': 30
+        "cookie": {
+            "name": "content_pipeline_auth",
+            "key": secret_key,
+            "expiry_days": 30,
         },
-        'pre-authorized': {
-            'emails': []
-        }
+        "pre-authorized": {"emails": []},
     }
     return config
+
 
 def check_authentication():
     """
@@ -106,26 +121,26 @@ def check_authentication():
         return True
 
     config = get_auth_config_from_env()
-    
+
     authenticator = stauth.Authenticate(
-        config['credentials'],
-        config['cookie']['name'],
-        config['cookie']['key'],
-        config['cookie']['expiry_days'],
-        config['pre-authorized']
+        config["credentials"],
+        config["cookie"]["name"],
+        config["cookie"]["key"],
+        config["cookie"]["expiry_days"],
+        config["pre-authorized"],
     )
 
-    name, authentication_status, username = authenticator.login('main')
-    
+    name, authentication_status, username = authenticator.login("main")
+
     if authentication_status:
         # Show logout in sidebar
-        authenticator.logout('Logout', 'sidebar')
+        authenticator.logout("Logout", "sidebar")
         return True
     elif authentication_status is False:
-        st.error('Username/password is incorrect')
+        st.error("Username/password is incorrect")
         return False
     elif authentication_status is None:
-        st.warning('Please enter your username and password')
+        st.warning("Please enter your username and password")
         return False
-        
+
     return False

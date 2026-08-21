@@ -1,7 +1,6 @@
 import os
 from typing import List, Dict
-from crewai import Agent, Task, Crew, Process
-from langchain_openai import ChatOpenAI
+from crewai import Agent, Task, Crew, Process, LLM
 from custom_tools import search_tool
 from dotenv import load_dotenv
 from logger import log_progress
@@ -9,26 +8,64 @@ from logger import log_progress
 # Load environment variables
 load_dotenv()
 
-api_key = os.getenv("DEEPSEEK_API_KEY")
 
-# Set OPENAI_API_KEY for compatibility with LangChain's ChatOpenAI
-if api_key:
-    os.environ["OPENAI_API_KEY"] = api_key
-else:
-    log_progress("WARNING: DEEPSEEK_API_KEY not found in .env")
+def get_default_llm(model_name: str = "deepseek-chat"):
+    """Configure the LLM based on user selection or fallback safely for tests"""
+    if "deepseek" in model_name:
+        api_key = (
+            os.getenv("DEEPSEEK_API_KEY")
+            or os.getenv("OPENAI_API_KEY")
+            or "mock-deepseek-key"
+        )
+        model_str = (
+            f"deepseek/{model_name}"
+            if not model_name.startswith("deepseek/")
+            else model_name
+        )
+        return LLM(
+            model=model_str,
+            api_key=api_key,
+            base_url="https://api.deepseek.com/v1",
+            temperature=0.7,
+            max_tokens=4000,
+        )
+    elif "gpt" in model_name:
+        api_key = os.getenv("OPENAI_API_KEY") or "mock-openai-key"
+        return LLM(
+            model=model_name,
+            api_key=api_key,
+            temperature=0.7,
+        )
+    elif "claude" in model_name:
+        api_key = os.getenv("ANTHROPIC_API_KEY") or "mock-anthropic-key"
+        model_str = (
+            f"anthropic/{model_name}"
+            if not model_name.startswith("anthropic/")
+            else model_name
+        )
+        return LLM(
+            model=model_str,
+            api_key=api_key,
+            temperature=0.7,
+        )
+    else:
+        api_key = (
+            os.getenv("DEEPSEEK_API_KEY")
+            or os.getenv("OPENAI_API_KEY")
+            or "mock-deepseek-key"
+        )
+        return LLM(
+            model="deepseek/deepseek-chat",
+            api_key=api_key,
+            base_url="https://api.deepseek.com/v1",
+            temperature=0.7,
+            max_tokens=4000,
+        )
 
-# Configure DeepSeek LLM
-deepseek_llm = ChatOpenAI(
-    model="deepseek-chat",
-    openai_api_key=api_key,
-    openai_api_base="https://api.deepseek.com/v1",
-    temperature=0.7,
-    max_tokens=4000
-)
 
 class ContentGenerationCrew:
     """Multi-agent content generation system with dynamic model support"""
-    
+
     def __init__(self, model: str = "deepseek-chat"):
         log_progress(f"Initializing NarrativeNexus Crew with engine: {model}...")
         self.model_name = model
@@ -38,33 +75,16 @@ class ContentGenerationCrew:
 
     def _setup_llm(self):
         """Configure the LLM based on user selection"""
-        if "deepseek" in self.model_name:
-            api_key = os.getenv("DEEPSEEK_API_KEY")
-            return ChatOpenAI(
-                model=self.model_name,
-                openai_api_key=api_key,
-                openai_api_base="https://api.deepseek.com/v1",
-                temperature=0.7
-            )
-        elif "gpt" in self.model_name:
-            # Assumes OPENAI_API_KEY is in .env
-            return ChatOpenAI(model=self.model_name, temperature=0.7)
-        elif "claude" in self.model_name:
-            from langchain_anthropic import ChatAnthropic
-            # Assumes ANTHROPIC_API_KEY is in .env
-            return ChatAnthropic(model_name=self.model_name, temperature=0.7)
-        else:
-            # Fallback to DeepSeek
-            return deepseek_llm
-        
+        return get_default_llm(self.model_name)
+
     def _create_agents(self) -> Dict[str, Agent]:
         """Create specialized content agents"""
-        
+
         log_progress("Creating agents...")
         # 1. Research Analyst
         researcher = Agent(
-            role='Senior Research Analyst',
-            goal='Discover accurate, current information and credible sources on any topic',
+            role="Senior Research Analyst",
+            goal="Discover accurate, current information and credible sources on any topic",
             backstory="""You are an expert research analyst with a PhD in Information Science.
             You have 15 years of experience in investigative research and fact-finding.
             You excel at finding authoritative sources, verifying information, and 
@@ -74,13 +94,13 @@ class ContentGenerationCrew:
             llm=self.llm,
             verbose=True,
             allow_delegation=False,
-            memory=False
+            memory=False,
         )
-        
+
         # 2. Content Writer
         writer = Agent(
-            role='Expert Content Writer',
-            goal='Create engaging, well-structured content that captivates readers',
+            role="Expert Content Writer",
+            goal="Create engaging, well-structured content that captivates readers",
             backstory="""You are an award-winning content writer with a background in 
             journalism and creative writing. You've written for top publications like 
             Medium, TechCrunch, and The Atlantic. Your writing is clear, engaging, and 
@@ -90,13 +110,13 @@ class ContentGenerationCrew:
             llm=self.llm,
             verbose=True,
             allow_delegation=False,
-            memory=False
+            memory=False,
         )
-        
+
         # 3. Senior Editor
         editor = Agent(
-            role='Senior Content Editor',
-            goal='Refine content to perfection through editing and structural improvements',
+            role="Senior Content Editor",
+            goal="Refine content to perfection through editing and structural improvements",
             backstory="""You are a meticulous editor with 20 years of experience in 
             publishing. You've edited content for major media outlets and have a keen eye 
             for clarity, flow, and impact. You improve structure, enhance readability, 
@@ -105,13 +125,13 @@ class ContentGenerationCrew:
             llm=self.llm,
             verbose=True,
             allow_delegation=False,
-            memory=False
+            memory=False,
         )
-        
+
         # 4. Fact Checker
         fact_checker = Agent(
-            role='Professional Fact Checker',
-            goal='Verify all claims, statistics, and assertions in content',
+            role="Professional Fact Checker",
+            goal="Verify all claims, statistics, and assertions in content",
             backstory="""You are a professional fact-checker who worked for major news 
             organizations. You have an obsessive attention to detail and never let false 
             information slip through. You verify every claim, cross-reference sources, 
@@ -121,13 +141,13 @@ class ContentGenerationCrew:
             llm=self.llm,
             verbose=True,
             allow_delegation=False,
-            memory=False
+            memory=False,
         )
-        
+
         # 5. SEO Specialist
         seo_specialist = Agent(
-            role='SEO Optimization Expert',
-            goal='Optimize content for search engines while maintaining quality and readability',
+            role="SEO Optimization Expert",
+            goal="Optimize content for search engines while maintaining quality and readability",
             backstory="""You are an SEO expert with deep knowledge of search engine 
             algorithms, keyword research, and content optimization. You've helped dozens 
             of websites rank #1 for competitive keywords. You optimize headlines, meta 
@@ -136,23 +156,23 @@ class ContentGenerationCrew:
             llm=self.llm,
             verbose=True,
             allow_delegation=False,
-            memory=False
+            memory=False,
         )
-        
+
         log_progress("All agents created.")
         return {
-            'researcher': researcher,
-            'writer': writer,
-            'editor': editor,
-            'fact_checker': fact_checker,
-            'seo_specialist': seo_specialist
+            "researcher": researcher,
+            "writer": writer,
+            "editor": editor,
+            "fact_checker": fact_checker,
+            "seo_specialist": seo_specialist,
         }
-    
+
     def _create_tasks(self, topic: str, content_type: str = "blog_post") -> List[Task]:
         """Create content generation tasks"""
-        
+
         agents = self.agents
-        
+
         # Task 1: Research
         research_task = Task(
             description=f"""
@@ -203,9 +223,9 @@ class ContentGenerationCrew:
             2. [Full source citation with URL]
             ... (All sources used)
             """,
-            agent=agents['researcher']
+            agent=agents["researcher"],
         )
-        
+
         # Task 2: Content Outlining
         outline_task = Task(
             description=f"""
@@ -227,10 +247,10 @@ class ContentGenerationCrew:
             # Content Outline: [Title]
             ...
             """,
-            agent=agents['writer'],
-            context=[research_task]
+            agent=agents["writer"],
+            context=[research_task],
         )
-        
+
         # Task 3: Content Writing
         write_task = Task(
             description=f"""
@@ -242,10 +262,10 @@ class ContentGenerationCrew:
             expected_output="""
             A complete, polished article in markdown format.
             """,
-            agent=agents['writer'],
-            context=[research_task, outline_task]
+            agent=agents["writer"],
+            context=[research_task, outline_task],
         )
-        
+
         # Task 4: Editing
         edit_task = Task(
             description="""
@@ -254,10 +274,10 @@ class ContentGenerationCrew:
             expected_output="""
             Edited article with editorial notes.
             """,
-            agent=agents['editor'],
-            context=[write_task]
+            agent=agents["editor"],
+            context=[write_task],
         )
-        
+
         # Task 5: Fact Checking
         fact_check_task = Task(
             description="""
@@ -266,10 +286,10 @@ class ContentGenerationCrew:
             expected_output="""
             Detailed Fact-Check Report.
             """,
-            agent=agents['fact_checker'],
-            context=[edit_task]
+            agent=agents["fact_checker"],
+            context=[edit_task],
         )
-        
+
         # Task 6: SEO Optimization
         seo_task = Task(
             description=f"""
@@ -279,54 +299,51 @@ class ContentGenerationCrew:
             expected_output="""
             SEO Optimization Report and the Final Optimized Content.
             """,
-            agent=agents['seo_specialist'],
-            context=[edit_task, fact_check_task]
+            agent=agents["seo_specialist"],
+            context=[edit_task, fact_check_task],
         )
-        
+
         return [
             research_task,
             outline_task,
             write_task,
             edit_task,
             fact_check_task,
-            seo_task
+            seo_task,
         ]
-    
-    def generate_content(
-        self,
-        topic: str,
-        content_type: str = "blog_post"
-    ) -> Dict:
+
+    def generate_content(self, topic: str, content_type: str = "blog_post") -> Dict:
         """
         Generate content using the multi-agent crew
         """
-        
+
         log_progress(f"🚀 Starting content generation for: {topic}")
-        
+
         # Create tasks
         tasks = self._create_tasks(topic, content_type)
         log_progress(f"Tasks created. Number of tasks: {len(tasks)}")
-        
+
         # Create crew
         crew = Crew(
             agents=list(self.agents.values()),
             tasks=tasks,
             process=Process.sequential,
-            verbose=True
+            verbose=True,
         )
-        
+
         # Execute crew
         log_progress("Executing crew.kickoff()...")
         result = crew.kickoff()
         log_progress("crew.kickoff() finished successfully.")
-        
+
         return {
             "final_content": str(result),
             "topic": topic,
             "content_type": content_type,
             "agents_used": len(self.agents),
-            "tasks_completed": len(tasks)
+            "tasks_completed": len(tasks),
         }
+
 
 if __name__ == "__main__":
     content_crew = ContentGenerationCrew()
