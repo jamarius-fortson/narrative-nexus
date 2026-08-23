@@ -8,7 +8,6 @@ Contributor: jackson-marcus
 
 from typing import Dict, List
 
-
 # ---------------------------------------------------------------------------
 # Industry Content Templates
 # ---------------------------------------------------------------------------
@@ -41,7 +40,11 @@ CONTENT_TEMPLATES: Dict[str, Dict] = {
             "Cite peer-reviewed studies, include expert medical commentary, "
             "and always add appropriate disclaimers. Prioritize evidence-based claims."
         ),
-        "suggested_types": ["Technical Narrative", "Strategic Blog Post", "White Paper"],
+        "suggested_types": [
+            "Technical Narrative",
+            "Strategic Blog Post",
+            "White Paper",
+        ],
         "tone": "Authoritative",
     },
     "Marketing & Growth": {
@@ -51,7 +54,11 @@ CONTENT_TEMPLATES: Dict[str, Dict] = {
             "Focus on actionable frameworks, real case studies, conversion metrics, "
             "and audience psychology. Include calls-to-action and distribution strategies."
         ),
-        "suggested_types": ["Strategic Blog Post", "Intelligence Brief", "Technical Narrative"],
+        "suggested_types": [
+            "Strategic Blog Post",
+            "Intelligence Brief",
+            "Technical Narrative",
+        ],
         "tone": "Persuasive",
     },
     "Sustainability & ESG": {
@@ -68,7 +75,12 @@ CONTENT_TEMPLATES: Dict[str, Dict] = {
         "icon": "📝",
         "description": "No industry-specific framing applied.",
         "prompt_prefix": "",
-        "suggested_types": ["White Paper", "Strategic Blog Post", "Technical Narrative", "Intelligence Brief"],
+        "suggested_types": [
+            "White Paper",
+            "Strategic Blog Post",
+            "Technical Narrative",
+            "Intelligence Brief",
+        ],
         "tone": "Professional",
     },
 }
@@ -126,6 +138,7 @@ TONE_STYLES: Dict[str, Dict] = {
 # Helper Functions
 # ---------------------------------------------------------------------------
 
+
 def get_template_names() -> List[str]:
     """Return list of all available template names."""
     return list(CONTENT_TEMPLATES.keys())
@@ -153,7 +166,9 @@ def build_enriched_topic(
     Returns:
         Enriched topic string ready for content generation.
     """
-    template = CONTENT_TEMPLATES.get(template_name, CONTENT_TEMPLATES["General (No Template)"])
+    template = CONTENT_TEMPLATES.get(
+        template_name, CONTENT_TEMPLATES["General (No Template)"]
+    )
     tone = TONE_STYLES.get(tone_name, TONE_STYLES["Professional"])
 
     parts = [topic]
@@ -168,7 +183,9 @@ def build_enriched_topic(
 
 def get_template_meta(template_name: str) -> Dict:
     """Return metadata for a given template."""
-    return CONTENT_TEMPLATES.get(template_name, CONTENT_TEMPLATES["General (No Template)"])
+    return CONTENT_TEMPLATES.get(
+        template_name, CONTENT_TEMPLATES["General (No Template)"]
+    )
 
 
 def get_tone_meta(tone_name: str) -> Dict:

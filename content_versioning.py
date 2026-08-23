@@ -2,7 +2,6 @@ import sqlite3
 import hashlib
 import json
 import re
-from datetime import datetime
 from typing import List, Dict, Optional
 
 
@@ -48,9 +47,9 @@ class ContentVersionControl:
                 row[1] for row in cursor.execute("PRAGMA table_info(content_versions)")
             }
             migration_cols = {
-                "tags":       "TEXT",
+                "tags": "TEXT",
                 "model_used": "TEXT",
-                "tone":       "TEXT",
+                "tone": "TEXT",
             }
             for col, col_type in migration_cols.items():
                 if col not in existing_cols:
@@ -132,12 +131,12 @@ class ContentVersionControl:
             rows = cursor.fetchall()
         return [
             {
-                "version":    r[0],
-                "date":       r[1],
-                "words":      r[2],
-                "tags":       json.loads(r[3]) if r[3] else [],
-                "model":      r[4] or "—",
-                "tone":       r[5] or "—",
+                "version": r[0],
+                "date": r[1],
+                "words": r[2],
+                "tags": json.loads(r[3]) if r[3] else [],
+                "model": r[4] or "—",
+                "tone": r[5] or "—",
             }
             for r in rows
         ]
@@ -185,16 +184,87 @@ class ContentVersionControl:
             A list of tag strings.
         """
         STOP_WORDS = {
-            "the", "a", "an", "and", "or", "but", "in", "on", "at", "to",
-            "for", "of", "with", "by", "from", "is", "are", "was", "were",
-            "it", "its", "this", "that", "these", "those", "be", "been",
-            "has", "have", "had", "do", "does", "did", "will", "would",
-            "can", "could", "should", "may", "might", "shall", "not",
-            "as", "if", "so", "than", "then", "when", "how", "what",
-            "which", "who", "all", "any", "their", "they", "we", "our",
-            "your", "you", "he", "she", "his", "her", "us", "my", "i",
-            "into", "about", "up", "out", "over", "more", "also", "just",
-            "new", "key", "top", "best", "each", "per",
+            "the",
+            "a",
+            "an",
+            "and",
+            "or",
+            "but",
+            "in",
+            "on",
+            "at",
+            "to",
+            "for",
+            "of",
+            "with",
+            "by",
+            "from",
+            "is",
+            "are",
+            "was",
+            "were",
+            "it",
+            "its",
+            "this",
+            "that",
+            "these",
+            "those",
+            "be",
+            "been",
+            "has",
+            "have",
+            "had",
+            "do",
+            "does",
+            "did",
+            "will",
+            "would",
+            "can",
+            "could",
+            "should",
+            "may",
+            "might",
+            "shall",
+            "not",
+            "as",
+            "if",
+            "so",
+            "than",
+            "then",
+            "when",
+            "how",
+            "what",
+            "which",
+            "who",
+            "all",
+            "any",
+            "their",
+            "they",
+            "we",
+            "our",
+            "your",
+            "you",
+            "he",
+            "she",
+            "his",
+            "her",
+            "us",
+            "my",
+            "i",
+            "into",
+            "about",
+            "up",
+            "out",
+            "over",
+            "more",
+            "also",
+            "just",
+            "new",
+            "key",
+            "top",
+            "best",
+            "each",
+            "per",
         }
 
         # Extract heading lines

@@ -1,5 +1,4 @@
 import os
-import sys
 import pytest
 from dotenv import load_dotenv
 from content_generation_crew import ContentGenerationCrew
