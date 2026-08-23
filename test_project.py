@@ -244,3 +244,127 @@ def test_log_progress(tmp_path, monkeypatch):
     with open(log_file, "r", encoding="utf-8") as f:
         content = f.read()
     assert "Test log entry message" in content
+
+
+# ==========================================
+# Content Templates Tests (jackson-marcus)
+# ==========================================
+
+
+def test_content_templates_meta():
+    from content_templates import (
+        CONTENT_TEMPLATES,
+        TONE_STYLES,
+        get_template_names,
+        get_tone_names,
+        get_template_meta,
+        get_tone_meta,
+        build_enriched_topic,
+    )
+
+    templates = get_template_names()
+    assert "Technology & AI" in templates
+    assert "Finance & Investment" in templates
+    assert "General (No Template)" in templates
+
+    tones = get_tone_names()
+    assert "Professional" in tones
+    assert "Conversational" in tones
+    assert "Academic" in tones
+
+    meta = get_template_meta("Technology & AI")
+    assert meta["icon"] == "🤖"
+    assert "prompt_prefix" in meta
+
+    tone_meta = get_tone_meta("Professional")
+    assert "instruction" in tone_meta
+
+    # Test enriched prompt construction
+    enriched = build_enriched_topic(
+        "Quantum Computing", "Technology & AI", "Analytical"
+    )
+    assert "Quantum Computing" in enriched
+    assert "[Industry Context]" in enriched
+    assert "[Tone & Style]" in enriched
+
+    # General template without extra prefix
+    enriched_gen = build_enriched_topic(
+        "Simple Topic", "General (No Template)", "Conversational"
+    )
+    assert "Simple Topic" in enriched_gen
+    assert "[Industry Context]" not in enriched_gen
+    assert "[Tone & Style]" in enriched_gen
+
+
+# ==========================================
+# Content Versioning Extensions (jackson-marcus)
+# ==========================================
+
+
+def test_content_versioning_extensions(tmp_path):
+    db_file = str(tmp_path / "test_versions_ext.db")
+    vc = ContentVersionControl(db_path=db_file)
+
+    sample_content = (
+        "# Artificial Intelligence Revolution\n"
+        "## Neural Networks and Deep Learning\n"
+        "## Generative Architecture\n"
+        "AI is transforming industries rapidly with neural networks."
+    )
+
+    tags = vc.auto_tag(sample_content)
+    assert isinstance(tags, list)
+    assert len(tags) > 0
+    assert any("intelligence" in t or "artificial" in t or "neural" in t for t in tags)
+
+    v1 = vc.save_version(
+        "ai_topic", sample_content, model_used="gpt-4o", tone="Academic"
+    )
+    assert v1 == 1
+
+    history = vc.get_history("ai_topic")
+    assert len(history) == 1
+    assert history[0]["model"] == "gpt-4o"
+    assert history[0]["tone"] == "Academic"
+    assert isinstance(history[0]["tags"], list)
+
+    # Test content retrieval
+    retrieved = vc.get_version_content("ai_topic", 1)
+    assert retrieved == sample_content
+
+    # Test list of topics
+    topics = vc.get_all_topics()
+    assert "ai_topic" in topics
+
+
+# ==========================================
+# Quality Scorer Extensions (jackson-marcus)
+# ==========================================
+
+
+def test_quality_scorer_extensions():
+    scorer = ContentQualityScorer()
+
+    sample = (
+        "# Overview of Next-Gen Architecture\n"
+        "## Core Principles\n"
+        "## Implementation Strategy\n"
+        "### Technical Details\n"
+        "### Benchmarking\n"
+        "Is this system scalable? For example, in 2026 we saw 99.9% uptime. "
+        '"Reliability is paramount." Try to get started today!\n'
+        "- Point 1\n- Point 2\n" + ("Architecture is modern and robust. " * 80)
+    )
+
+    report = scorer.score_content(sample, keyword="Architecture")
+    assert "overall_score" in report
+    assert "scores" in report
+    assert "grade" in report
+    assert "word_count" in report
+    assert "reading_time_min" in report
+    assert report["word_count"] > 0
+    assert report["reading_time_min"] >= 1
+    assert "keyword_density" in report["scores"]
+    assert "tone_consistency" in report["scores"]
+    assert report["scores"]["tone_consistency"] == 100
+

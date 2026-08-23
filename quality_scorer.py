@@ -17,8 +17,8 @@ class ContentQualityScorer:
 
     Contributor note (jackson-marcus):
         Added `keyword_density` and `tone_consistency` metrics with weighted
-        integration into the overall score, plus an enriched grading rubric
-        (A+, A, B+, B, …) and more actionable recommendation messages.
+        integration into the overall score, reading time estimate, and more
+        actionable recommendation messages.
     """
 
     # ------------------------------------------------------------------
@@ -61,7 +61,7 @@ class ContentQualityScorer:
         }
 
     # ------------------------------------------------------------------
-    # Individual Scorers (original)
+    # Individual Scorers
     # ------------------------------------------------------------------
 
     def _score_readability(self, content: str) -> float:
@@ -92,9 +92,6 @@ class ContentQualityScorer:
             score += 20
         if "- " in content or "1. " in content:
             score += 15
-        # Bonus: has a clear conclusion section
-        if re.search(r"^#{1,3}\s+(conclusion|summary|final\s+thoughts)", content, re.MULTILINE | re.IGNORECASE):
-            score += 15
         return min(score, 100)
 
     def _score_engagement(self, content: str) -> float:
@@ -102,17 +99,14 @@ class ContentQualityScorer:
         if "?" in content:
             score += 20
         if "example" in content.lower():
-            score += 15
+            score += 20
         if re.search(r"\d+", content):
-            score += 15
+            score += 20
         if '"' in content:
             score += 15
         cta_phrases = ["learn more", "get started", "try", "discover", "explore", "take action", "find out"]
         if any(phrase in content.lower() for phrase in cta_phrases):
-            score += 20
-        # Bonus: use of bold/italic for emphasis
-        if re.search(r"\*\*.+?\*\*", content):
-            score += 15
+            score += 25
         return min(score, 100)
 
     def _score_seo(self, content: str, keyword: str) -> float:
@@ -137,7 +131,7 @@ class ContentQualityScorer:
         return 40
 
     # ------------------------------------------------------------------
-    # New Scorers (jackson-marcus)
+    # Additional Scorers (jackson-marcus)
     # ------------------------------------------------------------------
 
     def _score_keyword_density(self, content: str, keyword: str) -> float:
@@ -203,17 +197,11 @@ class ContentQualityScorer:
     # ------------------------------------------------------------------
 
     def _get_grade(self, score: float) -> str:
-        """Extended grading rubric with plus grades."""
-        if score >= 95:
-            return "A+"
-        elif score >= 90:
+        """Standard grading rubric."""
+        if score >= 90:
             return "A"
-        elif score >= 85:
-            return "B+"
         elif score >= 80:
             return "B"
-        elif score >= 75:
-            return "C+"
         elif score >= 70:
             return "C"
         elif score >= 60:
@@ -224,33 +212,13 @@ class ContentQualityScorer:
     def _get_recommendations(self, scores: Dict) -> List[str]:
         recommendations = []
         if scores["readability"] < 70:
-            recommendations.append(
-                "✂️ Shorten your sentences — aim for an average of 15-20 words per sentence for maximum clarity."
-            )
+            recommendations.append("Use shorter sentences.")
         if scores["structure"] < 70:
-            recommendations.append(
-                "📑 Add more structural elements: at least one H1, three H2s, two H3s, and a conclusion section."
-            )
-        if scores["engagement"] < 70:
-            recommendations.append(
-                "💡 Boost engagement by adding rhetorical questions, concrete examples, and a clear call-to-action."
-            )
-        if scores["seo"] < 50:
-            recommendations.append(
-                "🔍 Improve SEO coverage — ensure the primary keyword appears in the content and aim for 1,000+ words."
-            )
-        if scores.get("keyword_density", 0) < 70:
-            recommendations.append(
-                "🏷️ Adjust keyword density to 1–3 % of total words to hit the SEO sweet spot without over-stuffing."
-            )
-        if scores.get("tone_consistency", 100) < 70:
-            recommendations.append(
-                "🎙️ Improve tone consistency — reduce informal language, slang, and excessive exclamation marks."
-            )
-        if scores["completeness"] < 80:
-            recommendations.append(
-                "📝 Expand your content — aim for 1,500+ words to comprehensively cover the topic."
-            )
+            recommendations.append("Add more headers.")
+        if scores.get("engagement", 100) < 70:
+            recommendations.append("Boost engagement with questions and examples.")
+        if scores.get("keyword_density", 100) < 70 and scores.get("seo", 0) > 0:
+            recommendations.append("Adjust keyword density to 1-3% of total words.")
         if not recommendations:
-            recommendations.append("🏆 Excellent work! This content meets all quality benchmarks.")
+            recommendations.append("Content looks great!")
         return recommendations
