@@ -1,8 +1,18 @@
-import streamlit as st
-from content_generation_crew import ContentGenerationCrew
 import time
 from datetime import datetime
 import markdown
+import streamlit as st
+from auth import check_authentication
+from content_generation_crew import ContentGenerationCrew
+from content_templates import (
+    build_enriched_topic,
+    get_template_meta,
+    get_template_names,
+    get_tone_meta,
+    get_tone_names,
+)
+from content_versioning import ContentVersionControl
+from quality_scorer import ContentQualityScorer
 
 # Page Configuration - NarrativeNexus Rebrand
 st.set_page_config(
@@ -13,8 +23,6 @@ st.set_page_config(
 )
 
 # Authentication Check
-from auth import check_authentication
-
 if not check_authentication():
     st.stop()
 
@@ -194,20 +202,6 @@ st.markdown(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Imports for new features (jackson-marcus)
-# ─────────────────────────────────────────────────────────────────────────────
-from content_templates import (
-    CONTENT_TEMPLATES,
-    TONE_STYLES,
-    get_template_names,
-    get_tone_names,
-    build_enriched_topic,
-    get_template_meta,
-    get_tone_meta,
-)
-
-
-# ─────────────────────────────────────────────────────────────────────────────
 # Crew Cache
 # ─────────────────────────────────────────────────────────────────────────────
 @st.cache_resource
@@ -331,7 +325,9 @@ if st.button("🚀 ORCHESTRATE GENERATION"):
             crew = get_crew(selected_model)
 
             # Build enriched topic with template + tone context (jackson-marcus)
-            enriched_topic = build_enriched_topic(topic, selected_template, selected_tone)
+            enriched_topic = build_enriched_topic(
+                topic, selected_template, selected_tone
+            )
 
             with st.status(
                 f"🌐 Orchestrating agents with {selected_model}...", expanded=True
@@ -354,9 +350,6 @@ if st.button("🚀 ORCHESTRATE GENERATION"):
 
             # ── Quality scoring & versioning ────────────────────────────────
             try:
-                from quality_scorer import ContentQualityScorer
-                from content_versioning import ContentVersionControl
-
                 scorer = ContentQualityScorer()
                 quality_results = scorer.score_content(result["final_content"], topic)
 
@@ -406,7 +399,9 @@ if st.button("🚀 ORCHESTRATE GENERATION"):
 
                 with dl_col2:
                     # ── HTML Export (jackson-marcus) ─────────────────────────
-                    html_body = markdown.markdown(result["final_content"], extensions=["tables", "fenced_code"])
+                    html_body = markdown.markdown(
+                        result["final_content"], extensions=["tables", "fenced_code"]
+                    )
                     full_html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -442,6 +437,7 @@ if st.button("🚀 ORCHESTRATE GENERATION"):
                 with dl_col3:
                     # ── Plain Text Export (jackson-marcus) ───────────────────
                     import re as _re
+
                     plain_text = _re.sub(r"[#*`_>\[\]!]", "", result["final_content"])
                     st.download_button(
                         label="📋 Export to Plain Text",
@@ -455,7 +451,9 @@ if st.button("🚀 ORCHESTRATE GENERATION"):
                 st.markdown('<div class="nexus-panel">', unsafe_allow_html=True)
                 m1, m2, m3, m4 = st.columns(4)
                 m1.metric("Node Count", result["agents_used"], "Active Agents")
-                m2.metric("Sequential Steps", result["tasks_completed"], "Verified Tasks")
+                m2.metric(
+                    "Sequential Steps", result["tasks_completed"], "Verified Tasks"
+                )
                 m3.metric(
                     "Word Velocity",
                     len(result["final_content"].split()),
@@ -484,7 +482,9 @@ if st.button("🚀 ORCHESTRATE GENERATION"):
                         )
                         st.caption("Governance Grade")
                     with gc2:
-                        st.markdown(f"**Overall Score: {quality_results['overall_score']} / 100**")
+                        st.markdown(
+                            f"**Overall Score: {quality_results['overall_score']} / 100**"
+                        )
                         st.progress(quality_results["overall_score"] / 100)
 
                     st.divider()
@@ -499,7 +499,9 @@ if st.button("🚀 ORCHESTRATE GENERATION"):
 
                     m_cols2 = st.columns(3)
                     m_cols2[0].metric("Keyword Density", sc.get("keyword_density", "—"))
-                    m_cols2[1].metric("Tone Consistency", sc.get("tone_consistency", "—"))
+                    m_cols2[1].metric(
+                        "Tone Consistency", sc.get("tone_consistency", "—")
+                    )
                     m_cols2[2].metric("Content Completeness", sc["completeness"])
 
                     st.markdown("#### 📋 Strategic Recommendations")

@@ -87,8 +87,8 @@ class ContentGenerationCrew:
             goal="Discover accurate, current information and credible sources on any topic",
             backstory="""You are an expert research analyst with a PhD in Information Science.
             You have 15 years of experience in investigative research and fact-finding.
-            You excel at finding authoritative sources, verifying information, and 
-            synthesizing complex data into clear insights. You never cite unverified 
+            You excel at finding authoritative sources, verifying information, and
+            synthesizing complex data into clear insights. You never cite unverified
             information and always provide source URLs.""",
             tools=[search_tool],
             llm=self.llm,
@@ -101,11 +101,11 @@ class ContentGenerationCrew:
         writer = Agent(
             role="Expert Content Writer",
             goal="Create engaging, well-structured content that captivates readers",
-            backstory="""You are an award-winning content writer with a background in 
-            journalism and creative writing. You've written for top publications like 
-            Medium, TechCrunch, and The Atlantic. Your writing is clear, engaging, and 
-            accessible. You excel at storytelling, using compelling hooks, and maintaining 
-            reader interest throughout. You always write in active voice and use concrete 
+            backstory="""You are an award-winning content writer with a background in
+            journalism and creative writing. You've written for top publications like
+            Medium, TechCrunch, and The Atlantic. Your writing is clear, engaging, and
+            accessible. You excel at storytelling, using compelling hooks, and maintaining
+            reader interest throughout. You always write in active voice and use concrete
             examples.""",
             llm=self.llm,
             verbose=True,
@@ -117,10 +117,10 @@ class ContentGenerationCrew:
         editor = Agent(
             role="Senior Content Editor",
             goal="Refine content to perfection through editing and structural improvements",
-            backstory="""You are a meticulous editor with 20 years of experience in 
-            publishing. You've edited content for major media outlets and have a keen eye 
-            for clarity, flow, and impact. You improve structure, enhance readability, 
-            eliminate redundancy, and ensure every sentence adds value. You catch 
+            backstory="""You are a meticulous editor with 20 years of experience in
+            publishing. You've edited content for major media outlets and have a keen eye
+            for clarity, flow, and impact. You improve structure, enhance readability,
+            eliminate redundancy, and ensure every sentence adds value. You catch
             grammatical errors, awkward phrasing, and logical inconsistencies.""",
             llm=self.llm,
             verbose=True,
@@ -132,10 +132,10 @@ class ContentGenerationCrew:
         fact_checker = Agent(
             role="Professional Fact Checker",
             goal="Verify all claims, statistics, and assertions in content",
-            backstory="""You are a professional fact-checker who worked for major news 
-            organizations. You have an obsessive attention to detail and never let false 
-            information slip through. You verify every claim, cross-reference sources, 
-            and flag anything that seems questionable. You provide corrections with 
+            backstory="""You are a professional fact-checker who worked for major news
+            organizations. You have an obsessive attention to detail and never let false
+            information slip through. You verify every claim, cross-reference sources,
+            and flag anything that seems questionable. You provide corrections with
             proper citations.""",
             tools=[search_tool],
             llm=self.llm,
@@ -148,10 +148,10 @@ class ContentGenerationCrew:
         seo_specialist = Agent(
             role="SEO Optimization Expert",
             goal="Optimize content for search engines while maintaining quality and readability",
-            backstory="""You are an SEO expert with deep knowledge of search engine 
-            algorithms, keyword research, and content optimization. You've helped dozens 
-            of websites rank #1 for competitive keywords. You optimize headlines, meta 
-            descriptions, keyword placement, and content structure. You balance SEO best 
+            backstory="""You are an SEO expert with deep knowledge of search engine
+            algorithms, keyword research, and content optimization. You've helped dozens
+            of websites rank #1 for competitive keywords. You optimize headlines, meta
+            descriptions, keyword placement, and content structure. You balance SEO best
             practices with user experience.""",
             llm=self.llm,
             verbose=True,
@@ -177,47 +177,47 @@ class ContentGenerationCrew:
         research_task = Task(
             description=f"""
             Conduct comprehensive research on the topic: "{topic}"
-            
+
             Your research should include:
             1. Current trends and latest developments (last 6-12 months)
             2. Key statistics and data points with sources
             3. Expert opinions and notable quotes
             4. Real-world examples and case studies
             5. Common questions or misconceptions
-            
+
             Focus on authoritative sources:
             - Academic papers and research studies
             - Reputable news outlets and industry publications
             - Expert blogs and official documentation
             - Government or institutional reports
-            
+
             Topic: {topic}
             """,
             expected_output="""
             A comprehensive research report in markdown format containing:
-            
+
             # Research Report: [Topic]
-            
+
             ## Executive Summary
             [2-3 sentences summarizing key findings]
-            
+
             ## Key Findings
             1. [Finding with source]
             2. [Finding with source]
             ... (5-7 findings total)
-            
+
             ## Statistics & Data
             - [Statistic with source and date]
             - [Statistic with source and date]
             ... (3-5 statistics)
-            
+
             ## Expert Insights
             - "[Quote]" - [Expert Name, Title, Source]
             ... (2-3 quotes)
-            
+
             ## Examples & Case Studies
             [2-3 relevant examples with details]
-            
+
             ## Sources
             1. [Full source citation with URL]
             2. [Full source citation with URL]
@@ -230,10 +230,10 @@ class ContentGenerationCrew:
         outline_task = Task(
             description=f"""
             Based on the research findings, create a detailed content outline.
-            
+
             Content Type: {content_type}
             Topic: {topic}
-            
+
             Your outline should:
             1. Start with a compelling hook
             2. Have a clear logical flow
@@ -243,7 +243,7 @@ class ContentGenerationCrew:
             """,
             expected_output="""
             A detailed content outline in this format:
-            
+
             # Content Outline: [Title]
             ...
             """,
@@ -255,7 +255,7 @@ class ContentGenerationCrew:
         write_task = Task(
             description=f"""
             Write a complete, engaging {content_type} based on the outline and research.
-            
+
             Length: Aim for 1500-2000 words
             Format: Markdown with proper headers, lists, and emphasis
             """,

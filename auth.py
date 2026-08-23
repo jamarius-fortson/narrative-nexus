@@ -1,9 +1,8 @@
+import os
 import yaml
 import streamlit as st
 import streamlit_authenticator as stauth
 from yaml.loader import SafeLoader
-from logger import log_progress
-import os
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -40,7 +39,7 @@ def setup_auth(config_file="config.yaml"):
 
     # Render login widget
     try:
-        results = authenticator.login()
+        authenticator.login()
         # Handle the tuple/variable return nature of different versions
         # Older versions return nothing, newer return tuple
     except Exception as e:

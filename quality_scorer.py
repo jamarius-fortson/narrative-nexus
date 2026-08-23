@@ -29,34 +29,36 @@ class ContentQualityScorer:
         """Generate a comprehensive quality score report."""
 
         scores = {
-            "readability":      self._score_readability(content),
-            "structure":        self._score_structure(content),
-            "engagement":       self._score_engagement(content),
-            "seo":              self._score_seo(content, keyword) if keyword else 0,
-            "completeness":     self._score_completeness(content),
-            "keyword_density":  self._score_keyword_density(content, keyword) if keyword else 0,
+            "readability": self._score_readability(content),
+            "structure": self._score_structure(content),
+            "engagement": self._score_engagement(content),
+            "seo": self._score_seo(content, keyword) if keyword else 0,
+            "completeness": self._score_completeness(content),
+            "keyword_density": (
+                self._score_keyword_density(content, keyword) if keyword else 0
+            ),
             "tone_consistency": self._score_tone_consistency(content),
         }
 
         # Weighted average ---------------------------------------------------
         weights = {
-            "readability":      0.20,
-            "structure":        0.18,
-            "engagement":       0.20,
-            "seo":              0.12,
-            "completeness":     0.12,
-            "keyword_density":  0.10,
+            "readability": 0.20,
+            "structure": 0.18,
+            "engagement": 0.20,
+            "seo": 0.12,
+            "completeness": 0.12,
+            "keyword_density": 0.10,
             "tone_consistency": 0.08,
         }
 
         overall = sum(scores[k] * weights[k] for k in scores)
 
         return {
-            "overall_score":    round(overall, 1),
-            "scores":           scores,
-            "grade":            self._get_grade(overall),
-            "recommendations":  self._get_recommendations(scores),
-            "word_count":       len(content.split()),
+            "overall_score": round(overall, 1),
+            "scores": scores,
+            "grade": self._get_grade(overall),
+            "recommendations": self._get_recommendations(scores),
+            "word_count": len(content.split()),
             "reading_time_min": max(1, round(len(content.split()) / 200)),
         }
 
@@ -104,7 +106,15 @@ class ContentQualityScorer:
             score += 20
         if '"' in content:
             score += 15
-        cta_phrases = ["learn more", "get started", "try", "discover", "explore", "take action", "find out"]
+        cta_phrases = [
+            "learn more",
+            "get started",
+            "try",
+            "discover",
+            "explore",
+            "take action",
+            "find out",
+        ]
         if any(phrase in content.lower() for phrase in cta_phrases):
             score += 25
         return min(score, 100)
@@ -159,9 +169,9 @@ class ContentQualityScorer:
         elif 0.5 <= density < 1.0 or 3.0 < density <= 4.0:
             return 70
         elif density > 4.0:
-            return 30   # keyword stuffing penalty
+            return 30  # keyword stuffing penalty
         else:
-            return 50   # too low
+            return 50  # too low
 
     def _score_tone_consistency(self, content: str) -> float:
         """
@@ -184,9 +194,7 @@ class ContentQualityScorer:
         )
         score -= min(len(informal) * 10, 40)
         # Emoji in body text (a rough check)
-        emoji_pattern = re.compile(
-            "[\U00010000-\U0010FFFF]", flags=re.UNICODE
-        )
+        emoji_pattern = re.compile("[\U00010000-\U0010ffff]", flags=re.UNICODE)
         emoji_hits = len(emoji_pattern.findall(content))
         if emoji_hits > 3:
             score -= 15

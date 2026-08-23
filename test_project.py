@@ -1,6 +1,4 @@
 import os
-import sqlite3
-import pytest
 from unittest.mock import patch, MagicMock
 from content_generation_crew import ContentGenerationCrew, get_default_llm
 from quality_scorer import ContentQualityScorer
@@ -253,13 +251,11 @@ def test_log_progress(tmp_path, monkeypatch):
 
 def test_content_templates_meta():
     from content_templates import (
-        CONTENT_TEMPLATES,
-        TONE_STYLES,
-        get_template_names,
-        get_tone_names,
-        get_template_meta,
-        get_tone_meta,
         build_enriched_topic,
+        get_template_meta,
+        get_template_names,
+        get_tone_meta,
+        get_tone_names,
     )
 
     templates = get_template_names()
@@ -367,4 +363,3 @@ def test_quality_scorer_extensions():
     assert "keyword_density" in report["scores"]
     assert "tone_consistency" in report["scores"]
     assert report["scores"]["tone_consistency"] == 100
-
