@@ -93,6 +93,36 @@ st.markdown(
         border-radius: 12px;
     }
 
+    /* Tag pill styling */
+    .tag-pill {
+        display: inline-block;
+        background: rgba(99, 102, 241, 0.15);
+        border: 1px solid rgba(99, 102, 241, 0.35);
+        color: #a5b4fc;
+        padding: 0.2rem 0.65rem;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-family: 'Outfit', sans-serif;
+        font-weight: 600;
+        margin-right: 0.3rem;
+        margin-bottom: 0.3rem;
+        letter-spacing: 0.03em;
+    }
+
+    /* Template card */
+    .template-card {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 14px;
+        padding: 0.85rem 1rem;
+        margin-bottom: 0.6rem;
+        cursor: pointer;
+        transition: border-color 0.2s ease;
+    }
+    .template-card:hover {
+        border-color: rgba(99, 102, 241, 0.5);
+    }
+
     /* Buttons */
     .stButton>button {
         background: var(--primary-gradient);
@@ -144,19 +174,50 @@ st.markdown(
         color: #6366f1 !important;
         border-bottom-color: #6366f1 !important;
     }
+
+    /* Grade badge */
+    .grade-badge {
+        display: inline-block;
+        font-family: 'Outfit', sans-serif;
+        font-size: 2rem;
+        font-weight: 800;
+        padding: 0.4rem 1.2rem;
+        border-radius: 14px;
+        background: var(--primary-gradient);
+        color: white;
+        letter-spacing: 0.05em;
+    }
 </style>
 """,
     unsafe_allow_html=True,
 )
 
 
-# Initialize crew
+# ─────────────────────────────────────────────────────────────────────────────
+# Imports for new features (jackson-marcus)
+# ─────────────────────────────────────────────────────────────────────────────
+from content_templates import (
+    CONTENT_TEMPLATES,
+    TONE_STYLES,
+    get_template_names,
+    get_tone_names,
+    build_enriched_topic,
+    get_template_meta,
+    get_tone_meta,
+)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Crew Cache
+# ─────────────────────────────────────────────────────────────────────────────
 @st.cache_resource
 def get_crew(model_name="deepseek-chat"):
     return ContentGenerationCrew(model=model_name)
 
 
-# Layout
+# ─────────────────────────────────────────────────────────────────────────────
+# Header
+# ─────────────────────────────────────────────────────────────────────────────
 col1, col2 = st.columns([2, 1])
 
 with col1:
@@ -166,7 +227,10 @@ with col1:
         unsafe_allow_html=True,
     )
 
-# Sidebar - Configuration & Intelligence Overview
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Sidebar — Configuration & Intelligence Overview
+# ─────────────────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("### ⚙️ Engine Configuration")
     selected_model = st.selectbox(
@@ -175,6 +239,20 @@ with st.sidebar:
         index=0,
         help="Select the neural architecture to power the agent reasoning.",
     )
+
+    st.divider()
+
+    # ── Tone & Style Selector (jackson-marcus) ──────────────────────────────
+    st.markdown("### 🎙️ Tone & Style")
+    tone_names = get_tone_names()
+    selected_tone = st.selectbox(
+        "Writing Tone",
+        tone_names,
+        index=0,
+        help="Controls the voice and register of the generated content.",
+    )
+    tone_meta = get_tone_meta(selected_tone)
+    st.caption(f"{tone_meta['icon']} {tone_meta['description']}")
 
     st.divider()
     st.markdown("### 🤖 The Intelligence Nexus")
@@ -200,15 +278,21 @@ with st.sidebar:
             unsafe_allow_html=True,
         )
 
-# Inputs Section
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Input Section
+# ─────────────────────────────────────────────────────────────────────────────
 st.markdown('<div class="nexus-panel">', unsafe_allow_html=True)
-c1, c2 = st.columns([3, 1])
-with c1:
+
+r1c1, r1c2, r1c3 = st.columns([3, 1, 1])
+
+with r1c1:
     topic = st.text_input(
         "Project Objective",
         placeholder="Enter the core topic or thesis for investigation...",
     )
-with c2:
+
+with r1c2:
     content_type = st.selectbox(
         "Output Schema",
         [
@@ -218,15 +302,36 @@ with c2:
             "Intelligence Brief",
         ],
     )
+
+with r1c3:
+    # ── Industry Template Selector (jackson-marcus) ─────────────────────────
+    template_names = get_template_names()
+    selected_template = st.selectbox(
+        "Industry Template",
+        template_names,
+        index=template_names.index("General (No Template)"),
+        help="Apply an industry-specific framing to your topic.",
+    )
+
+tmpl_meta = get_template_meta(selected_template)
+if selected_template != "General (No Template)":
+    st.info(f"{tmpl_meta['icon']} **{selected_template}**: {tmpl_meta['description']}")
+
 st.markdown("</div>", unsafe_allow_html=True)
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Generation Button
+# ─────────────────────────────────────────────────────────────────────────────
 if st.button("🚀 ORCHESTRATE GENERATION"):
     if not topic:
         st.warning("Please define a project objective to begin orchestration.")
     else:
         try:
-            # Re-initialize crew with selected model
             crew = get_crew(selected_model)
+
+            # Build enriched topic with template + tone context (jackson-marcus)
+            enriched_topic = build_enriched_topic(topic, selected_template, selected_tone)
 
             with st.status(
                 f"🌐 Orchestrating agents with {selected_model}...", expanded=True
@@ -234,8 +339,7 @@ if st.button("🚀 ORCHESTRATE GENERATION"):
                 st.write("📡 Initiating Secure Data Acquisition...")
 
                 start_time = time.time()
-                # Ensure the crew class supports the model parameter
-                result = crew.generate_content(topic, content_type)
+                result = crew.generate_content(enriched_topic, content_type)
                 end_time = time.time()
 
                 status.update(
@@ -244,12 +348,11 @@ if st.button("🚀 ORCHESTRATE GENERATION"):
                     expanded=False,
                 )
 
-            # Analytics & Content Rendering
             st.success(
                 f"Production cycle completed in {end_time - start_time:.1f} seconds."
             )
 
-            # Logic for scoring and saving (assuming these classes are available)
+            # ── Quality scoring & versioning ────────────────────────────────
             try:
                 from quality_scorer import ContentQualityScorer
                 from content_versioning import ContentVersionControl
@@ -258,78 +361,210 @@ if st.button("🚀 ORCHESTRATE GENERATION"):
                 quality_results = scorer.score_content(result["final_content"], topic)
 
                 vc = ContentVersionControl()
-                version_id = vc.save_version(topic, result["final_content"])
+                # Pass model and tone provenance (jackson-marcus)
+                version_id = vc.save_version(
+                    topic,
+                    result["final_content"],
+                    model_used=selected_model,
+                    tone=selected_tone,
+                )
+                # Extract auto-tags (jackson-marcus)
+                content_tags = vc.auto_tag(result["final_content"])
             except ImportError:
                 quality_results = None
                 version_id = None
+                content_tags = []
 
-            # Results Display
-            tab1, tab2, tab3, tab4 = st.tabs(
+            # ─────────────────────────────────────────────────────────────────
+            # Results Tabs
+            # ─────────────────────────────────────────────────────────────────
+            tab1, tab2, tab3, tab4, tab5 = st.tabs(
                 [
                     "📄 Final Narrative",
                     "📊 Production Analytics",
                     "⭐ Quality Governance",
+                    "🏷️ Tags & Provenance",
                     "📜 History",
                 ]
             )
 
+            # ── Tab 1: Final Narrative ───────────────────────────────────────
             with tab1:
                 st.markdown('<div class="nexus-panel">', unsafe_allow_html=True)
                 st.markdown(result["final_content"])
                 st.markdown("</div>", unsafe_allow_html=True)
 
-                st.download_button(
-                    label="📥 Export to Markdown",
-                    data=result["final_content"],
-                    file_name=f"NarrativeNexus_{datetime.now().strftime('%Y%m%d')}.md",
-                    mime="text/markdown",
-                )
+                dl_col1, dl_col2, dl_col3 = st.columns(3)
 
+                with dl_col1:
+                    st.download_button(
+                        label="📥 Export to Markdown",
+                        data=result["final_content"],
+                        file_name=f"NarrativeNexus_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md",
+                        mime="text/markdown",
+                    )
+
+                with dl_col2:
+                    # ── HTML Export (jackson-marcus) ─────────────────────────
+                    html_body = markdown.markdown(result["final_content"], extensions=["tables", "fenced_code"])
+                    full_html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{topic}</title>
+    <style>
+        body {{ font-family: 'Segoe UI', sans-serif; max-width: 860px; margin: 3rem auto; padding: 0 1.5rem; color: #1e293b; line-height: 1.8; }}
+        h1,h2,h3 {{ color: #4f46e5; }}
+        code {{ background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }}
+        pre {{ background: #f1f5f9; padding: 1rem; border-radius: 8px; overflow-x: auto; }}
+        blockquote {{ border-left: 4px solid #6366f1; margin-left: 0; padding-left: 1rem; color: #64748b; }}
+        table {{ border-collapse: collapse; width: 100%; }}
+        th, td {{ border: 1px solid #e2e8f0; padding: 0.5rem 0.75rem; text-align: left; }}
+        th {{ background: #f8fafc; }}
+    </style>
+</head>
+<body>
+{html_body}
+<hr>
+<footer style="color:#94a3b8;font-size:0.8rem;margin-top:2rem;">
+  Generated by NarrativeNexus &middot; {datetime.now().strftime('%B %d, %Y')} &middot; Model: {selected_model}
+</footer>
+</body>
+</html>"""
+                    st.download_button(
+                        label="🌐 Export to HTML",
+                        data=full_html,
+                        file_name=f"NarrativeNexus_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
+                        mime="text/html",
+                    )
+
+                with dl_col3:
+                    # ── Plain Text Export (jackson-marcus) ───────────────────
+                    import re as _re
+                    plain_text = _re.sub(r"[#*`_>\[\]!]", "", result["final_content"])
+                    st.download_button(
+                        label="📋 Export to Plain Text",
+                        data=plain_text,
+                        file_name=f"NarrativeNexus_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                        mime="text/plain",
+                    )
+
+            # ── Tab 2: Production Analytics ──────────────────────────────────
             with tab2:
                 st.markdown('<div class="nexus-panel">', unsafe_allow_html=True)
-                m1, m2, m3 = st.columns(3)
+                m1, m2, m3, m4 = st.columns(4)
                 m1.metric("Node Count", result["agents_used"], "Active Agents")
-                m2.metric(
-                    "Sequential Steps", result["tasks_completed"], "Verified Tasks"
-                )
+                m2.metric("Sequential Steps", result["tasks_completed"], "Verified Tasks")
                 m3.metric(
                     "Word Velocity",
                     len(result["final_content"].split()),
                     "Words Generated",
                 )
+                # Reading time metric (jackson-marcus)
+                reading_time = max(1, round(len(result["final_content"].split()) / 200))
+                m4.metric("Reading Time", f"{reading_time} min", "Estimated")
+
+                st.divider()
+                st.markdown(f"**🎙️ Tone Applied:** `{selected_tone}`")
+                st.markdown(f"**🏭 Industry Template:** `{selected_template}`")
+                st.markdown(f"**🤖 Model Used:** `{selected_model}`")
                 st.markdown("</div>", unsafe_allow_html=True)
 
+            # ── Tab 3: Quality Governance ────────────────────────────────────
             with tab3:
                 if quality_results:
                     st.markdown('<div class="nexus-panel">', unsafe_allow_html=True)
-                    st.markdown(
-                        f"### Governance Rating: **{quality_results['grade']}**"
-                    )
-                    st.progress(quality_results["overall_score"] / 100)
 
-                    c1, c2, c3 = st.columns(3)
-                    c1.metric(
-                        "Linguistic Clarity", quality_results["scores"]["readability"]
-                    )
-                    c2.metric(
-                        "Logical Structure", quality_results["scores"]["structure"]
-                    )
-                    c3.metric(
-                        "Strategic Engagement", quality_results["scores"]["engagement"]
-                    )
+                    gc1, gc2 = st.columns([1, 3])
+                    with gc1:
+                        st.markdown(
+                            f'<span class="grade-badge">{quality_results["grade"]}</span>',
+                            unsafe_allow_html=True,
+                        )
+                        st.caption("Governance Grade")
+                    with gc2:
+                        st.markdown(f"**Overall Score: {quality_results['overall_score']} / 100**")
+                        st.progress(quality_results["overall_score"] / 100)
 
-                    st.markdown("#### Strategic Recommendations")
+                    st.divider()
+
+                    # Extended metrics (jackson-marcus)
+                    sc = quality_results["scores"]
+                    m_cols = st.columns(4)
+                    m_cols[0].metric("Linguistic Clarity", sc["readability"])
+                    m_cols[1].metric("Logical Structure", sc["structure"])
+                    m_cols[2].metric("Strategic Engagement", sc["engagement"])
+                    m_cols[3].metric("SEO Coverage", sc["seo"])
+
+                    m_cols2 = st.columns(3)
+                    m_cols2[0].metric("Keyword Density", sc.get("keyword_density", "—"))
+                    m_cols2[1].metric("Tone Consistency", sc.get("tone_consistency", "—"))
+                    m_cols2[2].metric("Content Completeness", sc["completeness"])
+
+                    st.markdown("#### 📋 Strategic Recommendations")
                     for rec in quality_results["recommendations"]:
                         st.markdown(f"- {rec}")
                     st.markdown("</div>", unsafe_allow_html=True)
                 else:
                     st.info("Quality governance module not initialized.")
 
+            # ── Tab 4: Tags & Provenance (jackson-marcus) ────────────────────
             with tab4:
+                st.markdown('<div class="nexus-panel">', unsafe_allow_html=True)
+                st.markdown("#### 🏷️ Auto-Generated Content Tags")
+                if content_tags:
+                    tags_html = "".join(
+                        f'<span class="tag-pill">#{tag}</span>' for tag in content_tags
+                    )
+                    st.markdown(tags_html, unsafe_allow_html=True)
+                else:
+                    st.caption("No tags extracted.")
+
+                st.divider()
+                st.markdown("#### 🔍 Generation Provenance")
+                prov_col1, prov_col2, prov_col3 = st.columns(3)
+                prov_col1.markdown(f"**LLM Model**\n\n`{selected_model}`")
+                prov_col2.markdown(f"**Tone Style**\n\n`{selected_tone}`")
+                prov_col3.markdown(f"**Industry Template**\n\n`{selected_template}`")
+                st.caption(
+                    f"Generated on {datetime.now().strftime('%A, %B %d %Y at %H:%M:%S')}"
+                )
+                st.markdown("</div>", unsafe_allow_html=True)
+
+            # ── Tab 5: History ───────────────────────────────────────────────
+            with tab5:
                 st.markdown('<div class="nexus-panel">', unsafe_allow_html=True)
                 if version_id:
                     history = vc.get_history(topic)
-                    st.table(history)
+                    if history:
+                        for entry in history:
+                            tag_pills = "".join(
+                                f'<span class="tag-pill">#{t}</span>'
+                                for t in (entry.get("tags") or [])
+                            )
+                            st.markdown(
+                                f"""
+                                <div style="padding:0.75rem 1rem; border-radius:12px;
+                                            background:rgba(255,255,255,0.04);
+                                            border:1px solid rgba(255,255,255,0.08);
+                                            margin-bottom:0.6rem;">
+                                  <strong style="color:#a5b4fc">v{entry['version']}</strong>
+                                  &nbsp;·&nbsp;
+                                  <span style="color:#94a3b8;font-size:0.85rem;">{entry['date']}</span>
+                                  &nbsp;·&nbsp;
+                                  <span style="color:#64748b;font-size:0.8rem;">
+                                    {entry['words']} words &nbsp;|&nbsp;
+                                    Model: {entry.get('model','—')} &nbsp;|&nbsp;
+                                    Tone: {entry.get('tone','—')}
+                                  </span>
+                                  <br>{tag_pills}
+                                </div>
+                                """,
+                                unsafe_allow_html=True,
+                            )
+                    else:
+                        st.info("No history entries yet for this topic.")
                 else:
                     st.info("No historical data available for this objective.")
                 st.markdown("</div>", unsafe_allow_html=True)

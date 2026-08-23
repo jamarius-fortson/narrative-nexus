@@ -20,6 +20,12 @@ def log_progress(message):
     except Exception as e:
         print(f"Error writing to log file: {e}")
 
-    # Also print to terminal
-    print(formatted_message)
+    # Also print to terminal — encode safely for Windows CP1252 terminals
+    try:
+        print(formatted_message)
+    except UnicodeEncodeError:
+        safe_message = formatted_message.encode(
+            sys.stdout.encoding or "utf-8", errors="replace"
+        ).decode(sys.stdout.encoding or "utf-8")
+        print(safe_message)
     sys.stdout.flush()

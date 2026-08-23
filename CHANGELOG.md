@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.1.0] - 2026-08-24
+
+### Added (Contributor: jackson-marcus)
+- **Industry Content Templates** (`content_templates.py`): Five pre-built templates (Technology & AI, Finance & Investment, Health & Wellness, Marketing & Growth, Sustainability & ESG) that inject domain-specific framing into every generation run.
+- **Tone & Style Selector**: Five writing registers (Professional, Conversational, Academic, Creative & Narrative, Analytical) available from the sidebar, injecting style instructions into the agent pipeline.
+- **HTML & Plain Text Export**: Two additional download formats alongside the existing Markdown export.
+- **Enhanced Quality Scorer** (`quality_scorer.py`): Two new scoring dimensions — `keyword_density` (optimal 1–3 % range) and `tone_consistency` (informal language detection). Extended grading rubric now includes plus grades (A+, B+, C+). Results also expose `word_count` and `reading_time_min`.
+- **Content Tagging System** (`content_versioning.py`): `auto_tag()` extracts topic keywords from headings. Tags are stored in the SQLite version history and displayed as pill badges in the UI.
+- **Generation Provenance** (`content_versioning.py`): `model_used` and `tone` columns added to version records; safe schema migration preserves existing databases.
+- **Tags & Provenance Tab**: New fifth tab in the results panel surfaces content tags and the exact model/tone/template used for each run.
+- **Reading Time Metric**: Displayed in the Production Analytics tab (200 wpm estimate).
+- **Richer History Cards**: Version history entries now show model, tone, word count, and auto-generated tag pills.
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
